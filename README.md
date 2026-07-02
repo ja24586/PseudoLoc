@@ -1,4 +1,4 @@
-# Pseudolocalizer — Figma Plugin (v0.2)
+# Shibb pseudolocalizer — Figma Plugin (v0.2)
 ©2026 Joel Arellano
 
 ## Summary
