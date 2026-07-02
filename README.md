@@ -1,8 +1,16 @@
 # Pseudolocalizer — Figma Plugin (v0.2)
 ©2026 Joel Arellano
 
-## What it does
-- Select one or more text layers, or a frame/group containing them.
+## Summary
+Sense-check your Figma designs by reviewing how they might expand, transform,
+or break upon localization. Just make a selection and run the plugin to
+replace all selected copy with edge-case estimates for translated strings.
+
+- RTL transformation available with Hebrew & Arabic
+- Content-aware alert color applied to text that breaks its container
+- Summary reports available
+
+## How to
 - Each string's Latin letters are swapped for **visually-similar homoglyphs**
   (Greek, Cyrillic, and accented Latin look-alikes — e.g. Latin `O` → Greek
   `Ο`/`Ω` or Cyrillic `О`), then padded with a mix of Thai, Cyrillic, CJK,
