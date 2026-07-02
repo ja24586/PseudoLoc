@@ -1,6 +1,5 @@
-# Shibb pseudolocalizer — Figma Plugin (v0.2)
-©2026 Joel Arellano
-
+# Shibb — a pseudolocalization plugin for Figma (v2)
+©2026 Joel Arellano - Creative Commons Zero v1.0 Universal
 ## Summary
 Sense-check your Figma designs by reviewing how they might expand, transform,
 or break upon localization. Just make a selection and run the plugin to
