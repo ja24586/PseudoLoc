@@ -41,37 +41,82 @@
   button:hover {
     background: #0d8ee0;
   }
-  button:disabled {
-    background: #b8dffb;
-    cursor: default;
-  }
   button.secondary {
     margin-top: 8px;
     background: transparent;
     color: #555;
     font-weight: 400;
+    border: 1px solid #ddd;
   }
   button.secondary:hover {
     background: #f0f0f0;
   }
-  #results h3 {
-    font-size: 13px;
-    margin: 0 0 10px 0;
-  }
-  #results ul {
-    list-style: none;
-    margin: 0 0 16px 0;
-    padding: 0;
+  button.small {
+    width: auto;
+    padding: 6px 10px;
     font-size: 12px;
+    flex: 1;
   }
-  #results li {
+  a.footer-link {
+    display: block;
+    font-size: 11px;
+    color: #18a0fb;
+    text-decoration: none;
+    margin-top: 4px;
+  }
+  a.footer-link:hover {
+    text-decoration: underline;
+  }
+  a.footer-link.tertiary {
+    font-size: 13px;
+    color: #555;
+    text-align: center;
+    margin-top: 12px;
+  }
+  a.footer-link.tertiary:hover {
+    color: #1a1a1a;
+  }
+  .panel-header {
     display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
-    border-bottom: 1px solid #eee;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
   }
-  #results li span:last-child {
-    font-weight: 600;
+  .panel-header img {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .panel-header .panel-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  .feedback-block {
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid #eee;
+  }
+  p.feedback-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 4px 0;
+  }
+  p.feedback-body {
+    font-size: 11px;
+    color: #777;
+    line-height: 1.5;
+    margin: 0;
+  }
+  p.feedback-body a {
+    color: #18a0fb;
+    text-decoration: none;
+    word-break: break-all;
+  }
+  p.feedback-body a:hover {
+    text-decoration: underline;
   }
   .hidden {
     display: none;
@@ -81,135 +126,472 @@
     color: #d13438;
     margin-bottom: 12px;
   }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+  }
+  .summary-row .label-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .summary-row .value {
+    font-weight: 600;
+  }
+  .tooltip-wrapper {
+    position: relative;
+    display: inline-flex;
+  }
+  .info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ddd;
+    color: #555;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+    cursor: default;
+  }
+  .info-icon:focus-visible {
+    outline: 2px solid #18a0fb;
+    outline-offset: 1px;
+  }
+  /* Material 3 plain tooltip: appears on hover/focus, 4dp gap from anchor,
+     brief description only — https://m3.material.io/components/tooltips/guidelines */
+  .plain-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 4px;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 6px 9px;
+    border-radius: 4px;
+    width: 210px;
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.1s ease;
+    pointer-events: none;
+  }
+  .plain-tooltip.shown {
+    opacity: 1;
+    visibility: visible;
+  }
+  #issueReview {
+    display: none;
+    background: #faf9f7;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+  }
+  #issueReview.expanded {
+    display: block;
+  }
+  #issueReview .review-index {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  #issueReview .review-node-name {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  #issueReview .review-message {
+    font-size: 11px;
+    color: #444;
+    margin-bottom: 4px;
+    padding-left: 8px;
+    border-left: 2px solid #ccc;
+  }
+  #issueReview .review-buttons {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
 </style>
 </head>
 <body>
-  <div id="main">
-    <p>
-      Select one or more text layers (or a frame containing them), then run.
-      Overflowing fixed-size text boxes will be flagged with a signal color.
-    </p>
+  <div id="notice" class="hidden"></div>
+
+  <!-- SETTINGS VIEW -->
+  <div id="settingsView" class="hidden">
+    <div class="panel-header">
+      <img src="data:image/png;base64,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" alt="" />
+      <span class="panel-title">Settings</span>
+    </div>
     <label class="checkbox">
       <input type="checkbox" id="rtlToggle" />
-      Include RTL test characters (Arabic + Hebrew)
+      Include RTL
     </label>
     <label class="checkbox">
       <input type="checkbox" id="verticalToggle" />
-      Include vertical edge-case characters (recommended for Thai, Vietnamese, Arabic — Hindi/Devanagari and Telugu are also high-risk per Google's script guidelines, but aren't yet supported by this plugin)
+      Include Thai, Vietnamese, and Arabic
     </label>
     <label class="checkbox">
-      <input type="checkbox" id="stickyToggle" />
-      Add sticky notes explaining each flagged issue
+      <input type="checkbox" id="alwaysShowSummaryToggle" />
+      Always show summary
     </label>
-    <label class="checkbox">
-      <input type="checkbox" id="summaryToggle" checked />
-      Show run summary when done
-    </label>
-    <button id="run">Pseudolocalize Selection</button>
-    <p style="margin: 8px 0 0 0; font-size: 11px; color: #888;">
-      Vertical diacritic/ink overflow is always checked, regardless of the toggle above — it only controls whether extra stacked-mark characters get added to padding. Horizontal overflow, vertical overflow, and possible line collisions are reported as distinct issues.
-    </p>
-    <button id="cancel" class="secondary">Cancel</button>
+    <button id="settingsDone">Done</button>
+    <a class="footer-link tertiary" id="settingsCancel" href="#">Cancel</a>
+    <div class="feedback-block">
+      <p class="feedback-title">I'd love to hear from you!</p>
+      <p class="feedback-body">
+        Please share questions, feature requests, and feedback at
+        <a id="githubLink" href="https://github.com/ja24586/Shibb-PseudoLoc" target="_blank" rel="noopener noreferrer">https://github.com/ja24586/Shibb-PseudoLoc</a>.
+      </p>
+    </div>
   </div>
 
-  <div id="results" class="hidden">
-    <div id="notice"></div>
-    <h3>Run summary</h3>
-    <ul id="statsList"></ul>
-    <button id="close">Close</button>
+  <!-- RUN RESULTS VIEW -->
+  <div id="runView" class="hidden">
+    <div class="panel-header">
+      <img src="data:image/png;base64,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" alt="" />
+      <span class="panel-title">Summary</span>
+    </div>
+    <div class="summary-row">
+      <div class="label-group">
+        <span>LOC issues found</span>
+        <span class="tooltip-wrapper">
+          <span class="info-icon" id="locInfoIcon" tabindex="0" role="button" aria-describedby="locInfoText">i</span>
+          <span class="plain-tooltip" id="locInfoText" role="tooltip">
+            Includes text exceeding its container, and collisions between lines within the container.
+          </span>
+        </span>
+      </div>
+      <span class="value" id="locIssuesValue">0</span>
+    </div>
+
+    <div id="issueReview">
+      <div class="review-index" id="reviewIndex"></div>
+      <div class="review-node-name" id="reviewNodeName"></div>
+      <div id="reviewMessages"></div>
+      <div class="review-buttons">
+        <span class="tooltip-wrapper">
+          <button class="small secondary" id="reviewBack">Back</button>
+          <span class="plain-tooltip" id="reviewBackTooltip" role="tooltip">Use arrow keys to navigate</span>
+        </span>
+        <span class="tooltip-wrapper">
+          <button class="small secondary" id="reviewNext">Next</button>
+          <span class="plain-tooltip" id="reviewNextTooltip" role="tooltip">Use arrow keys to navigate</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <span>Locked / hidden layers skipped</span>
+      <span class="value" id="skippedLockedValue">0</span>
+    </div>
+    <div class="summary-row">
+      <span>Empty text layers skipped</span>
+      <span class="value" id="skippedEmptyValue">0</span>
+    </div>
+    <div class="summary-row">
+      <div class="label-group">
+        <span>Errors</span>
+        <span class="tooltip-wrapper">
+          <span class="info-icon" id="errorsInfoIcon" tabindex="0" role="button" aria-describedby="errorsInfoText">i</span>
+          <span class="plain-tooltip" id="errorsInfoText" role="tooltip">
+            Problems that prevented a string from being tested, or fonts that couldn't load and were substituted.
+          </span>
+        </span>
+      </div>
+      <span class="value" id="errorsValue">0</span>
+    </div>
+
+    <button id="viewLog" class="secondary hidden" style="margin-top: 12px;">View Log</button>
+    <button id="runDone" style="margin-top: 8px;">Done</button>
   </div>
 
   <script>
-    const mainView = document.getElementById("main");
-    const resultsView = document.getElementById("results");
-    const statsList = document.getElementById("statsList");
-    const noticeEl = document.getElementById("notice");
-    const runBtn = document.getElementById("run");
+    const notice = document.getElementById("notice");
+    const settingsView = document.getElementById("settingsView");
+    const runView = document.getElementById("runView");
 
-    document.getElementById("run").onclick = () => {
-      runBtn.disabled = true;
-      runBtn.textContent = "Running…";
-      const includeRTL = document.getElementById("rtlToggle").checked;
-      const verticalEdgeCase = document.getElementById("verticalToggle").checked;
-      const addStickies = document.getElementById("stickyToggle").checked;
-      const showSummary = document.getElementById("summaryToggle").checked;
-      parent.postMessage(
-        {
-          pluginMessage: {
-            type: "run",
-            includeRTL: includeRTL,
-            verticalEdgeCase: verticalEdgeCase,
-            addStickies: addStickies,
-            showSummary: showSummary
-          }
-        },
-        "*"
-      );
+    let currentIssueLog = [];
+    let currentErrorLog = [];
+    let reviewIndex = 0;
+
+    // Enter closes whichever view is active. The original Enter-to-run
+    // behavior no longer applies now that Run is invoked directly from the
+    // Figma menu/hotkey with no button click in the loop at all — this
+    // panel only ever appears for Settings or for reviewing results.
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      if (!settingsView.classList.contains("hidden")) {
+        document.getElementById("settingsDone").click();
+      } else if (!runView.classList.contains("hidden")) {
+        document.getElementById("runDone").click();
+      }
+    });
+
+    // ------------------------------------------------------------------
+    // Settings view — autosave on every change, no Save button needed.
+    // ------------------------------------------------------------------
+    function wireSettingsAutosave() {
+      const ids = ["rtlToggle", "verticalToggle", "alwaysShowSummaryToggle"];
+      ids.forEach((id) => {
+        document.getElementById(id).addEventListener("change", () => {
+          parent.postMessage(
+            {
+              pluginMessage: {
+                type: "settingsChanged",
+                includeRTL: document.getElementById("rtlToggle").checked,
+                verticalEdgeCase: document.getElementById("verticalToggle").checked,
+                alwaysShowSummary: document.getElementById("alwaysShowSummaryToggle").checked
+              }
+            },
+            "*"
+          );
+        });
+      });
+    }
+    wireSettingsAutosave();
+
+    document.getElementById("settingsDone").onclick = () => {
+      parent.postMessage({ pluginMessage: { type: "close" } }, "*");
     };
-
-    document.getElementById("cancel").onclick = () => {
+    document.getElementById("settingsCancel").onclick = (e) => {
+      e.preventDefault(); // it's an <a> for tertiary styling, not real navigation
       parent.postMessage({ pluginMessage: { type: "close" } }, "*");
     };
 
-    document.getElementById("close").onclick = () => {
+    // ------------------------------------------------------------------
+    // Info tooltips — Material 3 plain tooltip behavior: hover or focus to
+    // show, no click-to-toggle. Hides ~1.5s after leaving the target region
+    // (per M3 guidelines), immediately if a DIFFERENT tooltip is triggered.
+    // https://m3.material.io/components/tooltips/guidelines
+    // ------------------------------------------------------------------
+    let tooltipHideTimer = null;
+
+    function hideAllTooltips() {
+      document.querySelectorAll(".plain-tooltip.shown").forEach((el) => {
+        el.classList.remove("shown");
+        // Reset to default centered position so the next show() recomputes
+        // fresh rather than reusing a stale clamped offset from last time.
+        el.style.left = "";
+        el.style.transform = "";
+      });
+    }
+
+    // The default CSS centers the tooltip under its anchor via left: 50% +
+    // translateX(-50%). That overflows the panel for anchors near either
+    // edge (Back button near the left edge, in particular) — this measures
+    // the tooltip's natural centered position after it's shown, and if it
+    // would extend past the panel bounds, overrides with an explicit
+    // pixel-based left offset (relative to the tooltip-wrapper, since the
+    // tooltip is absolutely positioned against that, not the page) that
+    // keeps the whole tooltip on-screen.
+    function clampTooltipToPanel(wrapper, tooltip) {
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const panelWidth = document.documentElement.clientWidth;
+      const margin = 8;
+
+      let desiredLeft = tooltipRect.left;
+      let clampedLeft = desiredLeft;
+      if (clampedLeft < margin) clampedLeft = margin;
+      if (clampedLeft + tooltipRect.width > panelWidth - margin) {
+        clampedLeft = panelWidth - tooltipRect.width - margin;
+      }
+
+      if (clampedLeft !== desiredLeft) {
+        tooltip.style.left = (clampedLeft - wrapperRect.left) + "px";
+        tooltip.style.transform = "none";
+      }
+    }
+
+    function wireTooltip(iconId, tooltipId) {
+      const icon = document.getElementById(iconId);
+      const tooltip = document.getElementById(tooltipId);
+      const wrapper = icon.closest(".tooltip-wrapper");
+
+      const show = () => {
+        if (tooltipHideTimer) clearTimeout(tooltipHideTimer);
+        hideAllTooltips(); // triggering a new tooltip closes any other open one
+        tooltip.classList.add("shown");
+        clampTooltipToPanel(wrapper, tooltip);
+      };
+      const scheduleHide = () => {
+        if (tooltipHideTimer) clearTimeout(tooltipHideTimer);
+        tooltipHideTimer = setTimeout(() => {
+          tooltip.classList.remove("shown");
+          tooltip.style.left = "";
+          tooltip.style.transform = "";
+        }, 1500);
+      };
+
+      icon.addEventListener("mouseenter", show);
+      icon.addEventListener("focus", show);
+      icon.addEventListener("mouseleave", scheduleHide);
+      icon.addEventListener("blur", scheduleHide);
+    }
+    wireTooltip("locInfoIcon", "locInfoText");
+    wireTooltip("errorsInfoIcon", "errorsInfoText");
+    wireTooltip("reviewBack", "reviewBackTooltip");
+    wireTooltip("reviewNext", "reviewNextTooltip");
+
+    // ------------------------------------------------------------------
+    // Issue review — Back/Next only (Skip removed). Arrow keys mirror the
+    // buttons while the review section is expanded, for fast keyboard
+    // tap-through. The review section is now ALWAYS visible whenever any
+    // issues were found — no click-to-expand, per decision.
+    // ------------------------------------------------------------------
+    function renderReviewStep() {
+      if (currentIssueLog.length === 0) return;
+      const item = currentIssueLog[reviewIndex];
+      document.getElementById("reviewIndex").textContent =
+        "Issue " + (reviewIndex + 1) + " of " + currentIssueLog.length;
+      document.getElementById("reviewNodeName").textContent = item.nodeName;
+      const msgContainer = document.getElementById("reviewMessages");
+      msgContainer.innerHTML = "";
+      item.messages.forEach((m) => {
+        const div = document.createElement("div");
+        div.className = "review-message";
+        div.style.borderLeftColor = m.color;
+        div.textContent = m.text;
+        msgContainer.appendChild(div);
+      });
+      // Message-sending is intentionally NOT here — see sendSelectNode()
+      // below. On first display, the resize message needs to reach the main
+      // thread BEFORE selectNode, so its collision-avoidance check has the
+      // panel's real final dimensions rather than the initial default.
+    }
+
+    function sendSelectNode() {
+      if (currentIssueLog.length === 0) return;
+      const item = currentIssueLog[reviewIndex];
+      parent.postMessage({ pluginMessage: { type: "selectNode", nodeId: item.nodeId } }, "*");
+    }
+
+    function reviewNext() {
+      reviewIndex = Math.min(reviewIndex + 1, currentIssueLog.length - 1);
+      renderReviewStep();
+      sendSelectNode();
+    }
+    function reviewBack() {
+      reviewIndex = Math.max(reviewIndex - 1, 0);
+      renderReviewStep();
+      sendSelectNode();
+    }
+    document.getElementById("reviewNext").onclick = reviewNext;
+    document.getElementById("reviewBack").onclick = reviewBack;
+
+    document.addEventListener("keydown", (e) => {
+      const review = document.getElementById("issueReview");
+      if (!review.classList.contains("expanded")) return;
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        reviewNext();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        reviewBack();
+      }
+    });
+
+    // ------------------------------------------------------------------
+    // View Log — generates a plain-text file client-side (Blob + anchor
+    // click) since file downloads need a DOM context the main thread
+    // doesn't have.
+    // ------------------------------------------------------------------
+    document.getElementById("viewLog").onclick = () => {
+      let text = "Shibb Pseudolocalizer — Error Log\n";
+      text += "Generated " + new Date().toISOString() + "\n";
+      text += "=".repeat(50) + "\n\n";
+      currentErrorLog.forEach((err, i) => {
+        text += (i + 1) + ". " + err.nodeName + "\n";
+        text += "   " + err.message + "\n";
+        if (err.link) text += "   Resource: " + err.link + "\n";
+        text += "\n";
+      });
+      const blob = new Blob([text], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "shibb-error-log.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
+    document.getElementById("runDone").onclick = () => {
       parent.postMessage({ pluginMessage: { type: "close" } }, "*");
     };
 
-    const STAT_LABELS = {
-      processed: "Strings pseudolocalized",
-      horizontalOverflow: "Horizontal overflow",
-      verticalOverflow: "Vertical overflow",
-      impliedContainerFlags: "Inferred overflow (unclipped decorative shape)",
-      possibleLineCollision: "Possible line collision (approx.)",
-      stickiesCreated: "Issue stickies created",
-      placeholdersProtected: "Placeholder tokens protected",
-      skippedLocked: "Locked / hidden layers skipped",
-      autoLayoutChecked: "Auto-layout / hug layers checked",
-      skippedEmpty: "Empty text layers skipped",
-      fontIssues: "Font-load fallbacks",
-      errors: "Errors",
-      avgExpansionPct: "Average length growth"
-    };
-
+    // ------------------------------------------------------------------
+    // Init / results routing from the main thread
+    // ------------------------------------------------------------------
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
-      if (!msg || msg.type !== "results") return;
+      if (!msg) return;
 
-      mainView.classList.add("hidden");
-      resultsView.classList.remove("hidden");
-
-      if (msg.notice) {
-        noticeEl.textContent = msg.notice;
-        noticeEl.classList.remove("hidden");
-      } else {
-        noticeEl.classList.add("hidden");
-      }
-
-      statsList.innerHTML = "";
-      if (msg.stats) {
-        Object.keys(STAT_LABELS).forEach((key) => {
-          const li = document.createElement("li");
-          const labelSpan = document.createElement("span");
-          const valueSpan = document.createElement("span");
-          labelSpan.textContent = STAT_LABELS[key];
-          const raw = msg.stats[key];
-          valueSpan.textContent = key === "avgExpansionPct" ? raw + "%" : raw;
-          li.appendChild(labelSpan);
-          li.appendChild(valueSpan);
-          statsList.appendChild(li);
+      if (msg.type === "init" && msg.view === "settings") {
+        settingsView.classList.remove("hidden");
+        if (msg.settings) {
+          document.getElementById("rtlToggle").checked = !!msg.settings.includeRTL;
+          document.getElementById("verticalToggle").checked = !!msg.settings.verticalEdgeCase;
+          document.getElementById("alwaysShowSummaryToggle").checked = !!msg.settings.alwaysShowSummary;
+        }
+        requestAnimationFrame(() => {
+          const neededHeight = Math.ceil(document.body.scrollHeight) + 20;
+          parent.postMessage(
+            { pluginMessage: { type: "resize", width: 320, height: Math.max(neededHeight, 200) } },
+            "*"
+          );
         });
+        return;
       }
 
-      // Resize the plugin window to fit the actual rendered content, so the
-      // summary never needs to scroll regardless of how many stat rows or
-      // how long the notice text ends up being.
-      requestAnimationFrame(() => {
-        const neededHeight = Math.ceil(document.body.scrollHeight) + 4;
+      if (msg.type === "init" && msg.view === "run") {
+        runView.classList.remove("hidden");
+        const stats = msg.stats || {};
+        currentIssueLog = msg.issueLog || [];
+        currentErrorLog = msg.errorLog || [];
+
+        document.getElementById("locIssuesValue").textContent = stats.locIssuesFound || 0;
+        document.getElementById("skippedLockedValue").textContent = stats.skippedLocked || 0;
+        document.getElementById("skippedEmptyValue").textContent = stats.skippedEmpty || 0;
+        document.getElementById("errorsValue").textContent = stats.errors || 0;
+
+        if (stats.errors > 0) {
+          document.getElementById("viewLog").classList.remove("hidden");
+        }
+
+        // Always visible when there are issues — no click-to-expand.
+        if (currentIssueLog.length > 0) {
+          document.getElementById("issueReview").classList.add("expanded");
+          reviewIndex = 0;
+          renderReviewStep(); // populate content so the height measurement below is accurate
+        }
+
+        const neededHeight = Math.ceil(document.body.scrollHeight) + 20;
         parent.postMessage(
-          { pluginMessage: { type: "resize", width: 320, height: Math.max(neededHeight, 160) } },
+          { pluginMessage: { type: "resize", width: 320, height: Math.max(neededHeight, 200) } },
           "*"
         );
-      });
+
+        // Sent AFTER resize on purpose — code.js's collision-avoidance check
+        // (triggered by selectNode) needs the panel's real final dimensions,
+        // not whatever default was in place before this resize message
+        // arrives on the main thread.
+        if (currentIssueLog.length > 0) sendSelectNode();
+        return;
+      }
     };
   </script>
 </body>

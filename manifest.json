@@ -1,6 +1,6 @@
 {
-  "name": "Pseudolocalizer",
-  "id": "pseudolocalizer-dev",
+  "name": "Shibb Pseudolocalizer",
+  "id": "shibb-dev",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
@@ -8,5 +8,9 @@
   "documentAccess": "dynamic-page",
   "networkAccess": {
     "allowedDomains": ["none"]
-  }
+  },
+  "menu": [
+    { "name": "Run", "command": "run" },
+    { "name": "Settings...", "command": "settings" }
+  ]
 }
