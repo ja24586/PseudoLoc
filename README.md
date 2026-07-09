@@ -97,24 +97,14 @@ Two commands, both invoked from the Figma plugin menu:
   Turning "Always show summary" on skips the toast entirely and opens the
   full panel on every run, even a clean one.
 
-## The results panel
+## The Summary report
 
-Four rows: LOC issues found, locked/hidden layers skipped, empty layers
-skipped, errors. Each row bolds its label and count when its value is above
-zero (40% opacity and normal weight when it's zero), and gets a chevron and
-a Back/Next reviewer once its count is above zero. The chevron follows
-Material's expand/collapse convention: a downward-pointing chevron that
-rotates 180° over ~300ms when its row expands. Only one row can be expanded
-at a time — expanding a different row collapses whatever was open. Left/
-right arrow keys mirror Back/Next for whichever row is currently open.
+The post-run Summary displaces:
+1. LOC issues found,
+2. Locked/hidden layers skipped,
+3. Empty layers skipped, and
+4. Errors, such as missing typefaces.
 
-When the panel first appears, the highest-priority row with a nonzero count
-auto-expands — LOC issues first, then errors, then locked/hidden skipped,
-then empty skipped — using the same expand path (and the same collision
-avoidance) a manual click would trigger. If every row is at zero, which
-only happens with "Always show summary" on for an otherwise clean run,
-nothing expands and the panel instead checks itself against whatever was
-already selected when Run was invoked.
 
 Clicking through Back/Next jumps the canvas selection and viewport to the
 relevant layer, and the panel checks whether its own on-screen position now
@@ -140,20 +130,6 @@ The panel follows Figma's own light/dark theme automatically, via
 reload needed. Diagnostic colors (the orange/blue/magenta overflow
 signals, error red) stay the same in both themes on purpose — those are
 meaningful signals, not decorative choices.
-
-## Deliberately out of scope (by design)
-
-- **Full sentence-level RTL** isn't implemented — the RTL toggle embeds
-  Arabic/Hebrew word-chunks within otherwise-LTR strings. Testing a fully
-  mirrored RTL layout (icon flipping, alignment reversal, direction-aware
-  components) is a different, larger test surface than what this plugin
-  covers.
-- **Whole-page / whole-file scanning has no dedicated feature.** `Ctrl+A`
-  (or `Cmd+A`) on a page selects everything at the top level, and the
-  plugin's collector recurses into every child of whatever's selected —
-  frames, groups, sections, component instances — so a page-wide run needs
-  no new code, just that keyboard shortcut before running. No whole-*file*
-  (multi-page) option is offered by design.
 
 ## Files
 
