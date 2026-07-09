@@ -4,8 +4,8 @@
 Find localization bugs before sending copy to vendors or engineering. Shibb
 generates realistic pseudolocalized content, automatically detects layout
 failures, protects localization placeholders, simulates RTL and multilingual
-edge cases, and helps designers catch internationalization issues long before
-they reach production.
+edge cases, and helps designers catch internationalization issues before they
+hit your bottom line.
 
 # Features
 - 📦 Finds hidden Auto Layout issues
