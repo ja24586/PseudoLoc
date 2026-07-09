@@ -1,220 +1,173 @@
-# Shibb — a pseudolocalization plugin for Figma (v2)
+# Shibb — a pseudolocalization plugin for Figma
 
 # Test how designs will handle translations, before you deliver.
 
 ## Details
-- Shibb replaces each string in your selection with **visually-similar homoglyphs** (Greek, Cyrillic, and accented Latin look-alikes — e.g. Latin `O` → Greek
-  `Ο`/`Ω` or Cyrillic `О`), then pads these with a mix of Thai, Cyrillic, CJK,
-  and Vietnamese (multi-diacritic-stack) characters to hit a target
-  expansion length. Expansion is banded by source string length, calibrated
-  against IBM's "Guidelines to design global solutions" table (as
+
+- Shibb replaces each string in your selection with **visually-similar
+  homoglyphs** (Greek, Cyrillic, and accented Latin look-alikes — e.g. Latin
+  `O` → Greek `Ο`/`Ω` or Cyrillic `О`), then pads these with a mix of Thai,
+  Cyrillic, CJK, and Vietnamese (multi-diacritic-stack) characters to hit a
+  target expansion length. Expansion is banded by source string length,
+  calibrated against IBM's "Guidelines to design global solutions" table (as
   reproduced by [W3C i18n](https://www.w3.org/International/articles/article-text-size.en.html)):
   short strings (≤10 chars) get +200%, tapering down to +30% for strings
-  over 70 characters. These expansion targets are
-  computed on **grapheme count** (`Intl.Segmenter`, with a plain-character-count fallback if that API isn't available in a given Figma app version), not raw string length — so combining marks don't inflate the sizing math.
-- This new pseudoLOC is rewrapped in `[ ]` — a standard pseudoloc convention that
-  makes clipped/truncated brackets easy to spot visually.
+  over 70 characters. Targets are computed on **grapheme count**
+  (`Intl.Segmenter`, with a plain-character-count fallback if that API isn't
+  available in a given Figma app version), not raw string length, so
+  combining marks don't inflate the sizing math.
+- Pseudolocalized text is wrapped in `[ ]` — a standard pseudoloc convention
+  that makes clipped or truncated brackets easy to spot visually.
+- **Output is deterministic per node.** The same text layer, run again with
+  unchanged source text, produces the same pseudolocalized string and the
+  same overflow verdict every time — seeded per node (from its ID and
+  current text), not randomized per run.
 - Optional **RTL toggle**: mixes Arabic and Hebrew word-chunks (including
   Arabic-Indic digits and combining harakat/niqqud) into the padding,
   roughly one word in three, so strings end up with embedded RTL runs
   rather than a segregated block — closer to how real bidi bugs show up in
-  mixed-language product copy.
-- **Per-script font assignment**: Noto Sans (the "default" swap font) only
-  actually covers Latin, Greek, and Cyrillic — Thai, Arabic, Hebrew, and CJK
-  each ship as separate font families in Google's Noto system. The plugin
-  detects the script of every character run in the pseudolocalized string
-  and assigns `Noto Sans Thai`, `Noto Sans Arabic`, `Noto Sans Hebrew`, or
-  `Noto Sans JP` accordingly, so nothing renders as tofu. If a specific
-  family fails to load (rare, but possible on network-restricted Figma
-  installs), that run falls back to Noto Sans and is counted as a "font-load
-  fallback" in the results summary.
+  mixed-language product copy. A genuine strong-RTL character leads the
+  line when this is on, so the paragraph's actual reading direction flips,
+  with the bracket and source text rendering as an embedded LTR island
+  inside it — similar to how real RTL-locale UI often looks.
+- Optional **vertical edge-case characters** toggle: draws more heavily from
+  pre-assembled multi-mark sequences (a Thai consonant with a vowel *and*
+  tone mark stacked together, Vietnamese letters with two combining marks
+  at once, Arabic consonant+shadda gemination when RTL is also on) rather
+  than isolated marks scattered through ordinary padding. Recommended for
+  Thai, Vietnamese, and Arabic — Google's Material Design "Tall" script
+  tier also includes Hindi (Devanagari) and Telugu, which aren't in this
+  plugin's character set or font-assignment logic yet. Hebrew, despite
+  having niqqud, is classified "English-like" by Google, not "Tall" — it's
+  in the RTL toggle for bidi testing, not vertical stress.
+- **Per-script font assignment**: Thai, Arabic, Hebrew, and CJK characters
+  each get their own Noto family (`Noto Sans Thai/Arabic/Hebrew/JP`) rather
+  than falling back to core Noto Sans, which only covers Latin, Greek, and
+  Cyrillic. A failed font load for a given family falls back to Noto Sans
+  for that run and is logged as an error with a direct link to install it.
 - **Overflow detection measures against the original typeface**, not Noto
-  Sans. Before swapping fonts, the plugin temporarily auto-resizes the text
-  node (still in its original font) to measure what size the pseudolocalized
-  string would actually need, compares that against the original fixed
-  dimensions, then restores the original box size. This means overflow
-  results reflect the real production typeface's metrics (kerning, average
-  character width) rather than Noto Sans's — which may be meaningfully
-  narrower or wider. Only applies to fixed-size text nodes (`textAutoResize:
-  NONE`).
-- **Auto-layout / "hug" text nodes get a different, complementary check.**
-  These are designed to grow with content, so a fixed-size-style measurement
-  doesn't apply — instead, growth is a problem when it escapes a *clipping*
-  ancestor further up the tree (a fixed-size parent frame, an auto-layout
-  frame with a maxWidth/maxHeight ceiling, a section, etc). The plugin walks
-  the ancestor chain after Figma's own layout engine has reflowed everything
-  live, and flags any node whose rendered box escapes the bounds of an
-  ancestor with `clipsContent: true`. Both mechanisms roll up into the same
-  "LOC issues found" count in the summary.
-- **Three overflow signals, disambiguated rather than collapsed into one.**
-  Earlier versions reported a single "overflowed" boolean covering both axes
-  and both detection mechanisms. Now split into: **horizontal overflow**
-  (box/ancestor width exceeded — orange), **vertical overflow** (box/
-  ancestor height exceeded — blue), and **possible line collision**
-  (vertical ink escaping the node's own box — magenta, the same mechanism
-  described above under vertical diacritic overflow). Each gets its own
-  stat count and its own color, surfaced in the expandable "LOC issues
-  found" review in the results panel.
-- **Vertical diacritic/ink overflow — always checked, not optional.** Compares
-  each text node's nominal layout box (`absoluteBoundingBox`) against
-  Figma's own accounting of the actual rendered ink extent
-  (`absoluteRenderBounds`), which includes anything — tall diacritics,
-  ascenders, descenders — that falls outside the nominal box. Flagged nodes
-  get a magenta stroke, kept visually distinct from the fill-color box/
-  ancestor overflow signal so both can be seen at once on the same node.
-  **Known limitation, stated plainly**: this catches ink escaping the node's
-  own outer box (a mark poking above the first line, or dropping below the
-  last one) — it does *not* catch a diacritic on one interior line visually
-  colliding with a descender on the line above it, inside a multi-line
-  block. Figma's Plugin API doesn't expose per-line bounding boxes; catching
-  that specific case would need image export and pixel-level analysis, a
-  meaningfully heavier feature than what's built here.
-- **Optional "vertical edge-case characters" toggle.** Off by default. When
-  on, padding draws more heavily from pre-assembled multi-mark sequences —
-  a Thai consonant with a vowel *and* tone mark stacked together, Vietnamese
-  base letters with two combining marks at once, Arabic consonant+shadda
-  gemination stacks (the last only when RTL is also enabled, since Arabic
-  script isn't touched otherwise) — rather than isolated marks scattered
-  through ordinary padding. The checkbox label names Thai, Vietnamese, and
-  Arabic as the recommended scripts, per Google's Material Design language
-  categories, which classify scripts into English-like / Tall / Dense tiers
-  for exactly this purpose (`m2.material.io/design/typography/language-support`).
-  Thai, Vietnamese, and Arabic are in the "Tall" tier — Hindi (Devanagari)
-  and Telugu are too, but aren't yet in this plugin's character pools or
-  font-assignment logic, so they're named in the label as known gaps rather
-  than silently omitted. Worth noting since it's counterintuitive: Hebrew,
-  despite having niqqud vowel points, is classified as "English-like" by
-  Google, not "Tall" — it's included in the RTL toggle for bidi testing, not
-  because it needs the vertical-stress treatment.
-- **Implied-container overflow — a fallback for a real, common gap, covering
-  two distinct patterns.** Neither the fixed-box self-check nor the
-  ancestor-`clipsContent` check has any way to catch either of these:
-  (1) **Sibling pattern**: a decorative rectangle drawn as a "text field" or
-  "chip," with the actual text sitting on top of it as an unrelated,
-  unclipped sibling layer — never structurally parented, so nothing is
-  actually being clipped from Figma's own point of view, even though it
-  visually should be. Found by testing against a real login-screen design
-  where genuine overflow went completely unflagged. (2) **Parent pattern**:
-  the text's *direct parent* has a deliberate, explicit size but isn't set
-  to clip — found via a second real test, a status-bar clock ("9:27")
-  sitting in a plain, non-auto-layout "Time" frame sized to 54×18px with
-  `Clip content` off. The frame's size was clearly intentional (that's the
-  whole reason it has explicit dimensions), but nothing enforced it, so the
-  pseudolocalized clock overflowed the frame with zero detection. This is a
-  meaningfully different case from the sibling pattern — containment against
-  a direct parent doesn't need the 80% overlap threshold sibling-matching
-  uses, since a child's original box is inherently within its parent's box
-  in any normal, non-overflowing layout, so a qualifying parent (plain frame,
-  or auto-layout frame with at least one axis not set to hug) is treated as
-  an implied container immediately, checked before falling back to the
-  sibling search. Both patterns infer containment geometrically instead of
-  structurally, and both are labeled as inference, not certainty, in the
-  issue message ("(inferred)") — including a direct suggestion to enable
-  `Clip content` on the container or confirm the text is meant to be
-  unconstrained.
-- **Worth a real design-practice note, not just a technical one**: a sized-
-  but-non-clipping frame is a genuinely mixed bag depending on context. For
-  ordinary translatable content, it's a real risk — it looks bounded but
-  enforces nothing, which is exactly the failure mode this tool exists to
-  catch. But "Status Bar," "Time," "Battery," "Connections" are the standard
-  layer names from official iOS/Android device-mockup UI kits, representing
-  OS-rendered chrome that no translator ever actually touches — a reasonable
-  pattern in that specific context.
-- **Toggle settings persist across every Run, set from the separate
-  Settings command.** RTL, vertical edge-case, and always-show-summary save
-  via `figma.clientStorage` the moment you change them in **Settings...**
-  (no Save button — autosaves on change), and every subsequent **Run**
-  invocation reads them automatically. Scoped per plugin, per user:
-  persists across every file you open on this machine, but does **not**
-  sync across different machines if you use more than one.
-- **Compact native toast by default, full panel only when asked for.**
-  With "Always show summary" off (the default), a completed Run shows a
-  one-line Figma toast instead of opening the panel — e.g. "Issues: 3,
-  Skipped: 1, Errors: 2," with each segment appearing only if its count is
-  above zero, or "No issues found" if everything's clean. If there's
-  anything worth reviewing, the toast includes a **Details** button that
-  opens the full panel on demand. Real lifecycle subtlety worth knowing:
-  Figma automatically closes any toast with a custom action button the
-  moment the plugin itself closes, so the plugin has to stay alive — not
-  call `closePlugin()` — until either Details is clicked or the toast's own
-  timeout elapses, with the pending auto-close explicitly cancelled if
-  Details *was* clicked (otherwise the plugin would force-close out from
-  under someone actively reviewing results). Turning "Always show summary"
-  on skips the toast entirely and always opens the full panel instead, even
-  on a completely clean run.
-- **Pseudolocalized output is now deterministic per node, not random every
-  run.** Real bug, found by testing: every homoglyph pick, padding-word
-  selection, and script-mix roll ran on unseeded `Math.random()`, so the
-  exact pseudolocalized string — and therefore whether a borderline element
-  crossed its overflow threshold — differed on every single run, even
-  against a completely unchanged design. `buildPadding()`'s loop makes this
-  concrete: it appends random 3–8 character words until the total *meets or
-  exceeds* the target length, so the final overshoot varies by several
-  characters run to run. An element sitting right at the edge of overflow
-  would sometimes get just enough extra padding to tip over and sometimes
-  wouldn't — invisible to the detection logic itself (which is fully
-  deterministic given a fixed input), but very visible as "the plugin
-  randomly ignores clear overflow issues" from the outside. Fixed with a
-  seeded PRNG (mulberry32, seeded from a hash of `node.id + "::" +
-  originalText`) threaded through the entire generation chain in place of
-  `Math.random()`. Same node, same source text, same output, every time —
-  verified directly (not just asserted): two independent calls with an
-  identical seed produce byte-for-byte identical strings, a different node
-  id produces different output, and editing the source text changes the
-  seed automatically so a stale pseudo-output never lingers after a real
-  content edit.
-- **The issue review section is always visible when there are any issues —
-  no click-to-expand.** Auto-expands the moment the run-results panel
-  displays, immediately showing issue 1 of N rather than requiring a click
-  on the summary row first.
-- **Placeholder/interpolation tokens are protected.** Real production
-  strings carry variable tokens — `{{name}}`, `${username}`, `{count}`,
-  `%s`/`%d`/`%1$s` — and earlier versions of this plugin would corrupt them
-  during homoglyph substitution, breaking the string rather than just
-  stress-testing its layout. Tokens are now detected and passed through
-  untouched; only the surrounding text gets pseudolocalized. The count of
-  protected tokens per run shows in the results summary.
-- **Style preservation**: font size, letter spacing, and (if explicitly set,
-  i.e. not `AUTO`) line height are captured from the original typeface before
-  the swap and reapplied to the Noto Sans replacement, so the replacement
-  text approximates the source typeface's density rather than defaulting to
-  Noto's own spacing.
-- Locked or hidden text layers are skipped automatically and counted in the
-  results summary, rather than being silently edited.
-- On completion, the plugin defaults to a **compact native toast rather
-  than opening a panel at all** — see the toast/Details behavior described
-  above under settings persistence. The full panel (four-row summary:
-  strings with LOC issues found, locked/hidden layers skipped, empty layers
-  skipped, errors) only opens via the toast's Details button, or always, if
-  "Always show summary" is on. The panel measures its own rendered content
-  and resizes the plugin window to fit, so it never requires scrolling.
+  Sans, for fixed-size text nodes (`textAutoResize: NONE`) — the plugin
+  temporarily auto-resizes the node in its original font to measure real
+  overflow, then restores the original box exactly (size and position).
+- **Auto-layout / "hug" text nodes** get a complementary check: growth is
+  flagged when it escapes an ancestor with `clipsContent: true` further up
+  the tree.
+- **Implied-container detection** catches two patterns neither of the above
+  checks can see: (1) a decorative shape drawn as a "text field" with the
+  actual text sitting on top as an unrelated, unclipped sibling layer, and
+  (2) a direct parent frame with a deliberate, explicit size that isn't set
+  to clip (e.g. a plain frame, or an auto-layout frame with at least one
+  axis not set to hug). Both infer containment geometrically rather than
+  structurally, and both are labeled "(inferred)" in the issue message,
+  which also suggests enabling `Clip content` or confirming the text is
+  meant to be unconstrained.
+- A sized-but-non-clipping frame is a mixed bag depending on context — a
+  real risk for ordinary translatable content, but a reasonable pattern for
+  system-chrome mockups ("Status Bar," "Time," "Battery," "Connections,"
+  the standard layer names from official iOS/Android device-mockup kits)
+  representing OS-rendered elements no translator ever touches. **The
+  plugin already skips locked layers**, so the simplest way to exclude
+  status-bar chrome from testing is to lock those layers in your source
+  file — no naming convention or exceptions list required.
+- **Placeholder/interpolation tokens are protected.** `{{name}}`,
+  `${username}`, `{count}`, `%s`/`%d`/`%1$s` pass through untouched; only
+  the surrounding text gets pseudolocalized.
+- **Style preservation**: font size, letter spacing, and (if explicitly
+  set) line height are captured from the original typeface and reapplied
+  to the Noto replacement, so it approximates the source typeface's
+  density rather than defaulting to Noto's own spacing.
+- Locked and hidden text layers, and empty text layers, are skipped
+  automatically and counted in the results.
+
+## How it runs
+
+Two commands, both invoked from the Figma plugin menu:
+
+- **Run** executes immediately against the current selection — no panel,
+  no button, no checkboxes to set first. It reports back via a compact
+  native toast: "Issues: 3, Skipped: 1, Errors: 2" (each segment only
+  appears if its count is above zero), or "No issues found" if the design's
+  clean. If there's anything worth reviewing, the toast includes a
+  **Details** button that opens the full panel on demand.
+- **Settings** opens a separate small panel with three toggles (RTL,
+  vertical edge-case characters, always show summary) plus a link to file
+  feedback or feature requests. Changes autosave immediately — no Save
+  button — and persist across every file you open on this machine (via
+  `figma.clientStorage`, scoped per-user and not synced across machines).
+  Turning "Always show summary" on skips the toast entirely and opens the
+  full panel on every run, even a clean one.
+
+## The results panel
+
+Four rows: LOC issues found, locked/hidden layers skipped, empty layers
+skipped, errors. Each row bolds its label and count when its value is above
+zero (40% opacity and normal weight when it's zero), and gets a chevron and
+a Back/Next reviewer once its count is above zero. The chevron follows
+Material's expand/collapse convention: a downward-pointing chevron that
+rotates 180° over ~300ms when its row expands. Only one row can be expanded
+at a time — expanding a different row collapses whatever was open. Left/
+right arrow keys mirror Back/Next for whichever row is currently open.
+
+When the panel first appears, the highest-priority row with a nonzero count
+auto-expands — LOC issues first, then errors, then locked/hidden skipped,
+then empty skipped — using the same expand path (and the same collision
+avoidance) a manual click would trigger. If every row is at zero, which
+only happens with "Always show summary" on for an otherwise clean run,
+nothing expands and the panel instead checks itself against whatever was
+already selected when Run was invoked.
+
+Clicking through Back/Next jumps the canvas selection and viewport to the
+relevant layer, and the panel checks whether its own on-screen position now
+overlaps that layer — if so, it nudges itself to whichever nearby position
+(up/down/left/right) requires the least movement while staying fully
+visible, or leaves itself alone if no such position exists. **Known
+limitation**: Figma's `figma.ui.reposition()` stops having any effect once
+the panel has been manually dragged by the user — a Plugin API limitation,
+not something fixable from plugin code.
+
+Info icons next to "LOC issues found" and "Errors" show a definition on
+hover or keyboard focus (Material 3 plain-tooltip pattern — no click
+needed, and the tooltip clamps itself to stay within the panel rather than
+running off the edge).
+
+When there's at least one error, a **View Log** button generates a
+downloadable `.txt` file listing each one in plain language, with a direct
+resource link where relevant (e.g. a font's install page).
+
+The panel follows Figma's own light/dark theme automatically, via
+`figma.showUI`'s `themeColors` option and Figma's `.figma-dark` class on
+`<html>` — it updates live if the user switches theme mid-session, no
+reload needed. Diagnostic colors (the orange/blue/magenta overflow
+signals, error red) stay the same in both themes on purpose — those are
+meaningful signals, not decorative choices.
 
 ## Deliberately out of scope (by design)
+
 - **Full sentence-level RTL** isn't implemented — the RTL toggle embeds
   Arabic/Hebrew word-chunks within otherwise-LTR strings. Testing a fully
   mirrored RTL layout (icon flipping, alignment reversal, direction-aware
   components) is a different, larger test surface than what this plugin
-  covers, and probably deserves its own dedicated toggle later.
+  covers.
 - **Whole-page / whole-file scanning has no dedicated feature.** `Ctrl+A`
   (or `Cmd+A`) on a page selects everything at the top level, and the
-  plugin's collector already recurses into every child of whatever's
-  selected — frames, groups, sections, component instances. So a page-wide
-  run doesn't need new code, just that keyboard shortcut before hitting Run.
-  No whole-*file* (multi-page) option is offered by design.
-
+  plugin's collector recurses into every child of whatever's selected —
+  frames, groups, sections, component instances — so a page-wide run needs
+  no new code, just that keyboard shortcut before running. No whole-*file*
+  (multi-page) option is offered by design.
 
 ## Files
+
 - `manifest.json` — plugin config, including the two-command menu (`Run`
   and `Settings...`)
 - `code.js` — main thread logic (runs in Figma's plugin sandbox)
-- `ui.html` — the plugin UI panel. Renders one of two views depending on
-  which command launched it: the settings checkboxes, or the run-results
-  summary (only shown at all if there's something worth reviewing).
+- `ui.html` — the plugin UI panel, rendering either the Settings view or
+  the results panel depending on which command launched it
 
-## Easy tuning points if you want to adjust behavior later
-- `expansionRatio()` in `code.js` — change the five IBM-calibrated expansion bands.
-- `HOMOGLYPHS` — adjust which look-alike characters get used per letter.
-- `PAD_POOL_BASE` / `PAD_POOL_RTL` — swap in/out which scripts get used for padding.
-- `SCRIPT_FONT` — change which Noto family is used per detected script.
-- `SIGNAL_PALETTE` — change the candidate overflow-flag colors.
-- `buildPadding()` — adjust the ~35% RTL word-mix rate.
+## Easy tuning points
+
+- `expansionRatio()` in `code.js` — the five IBM-calibrated expansion bands
+- `HOMOGLYPHS` — which look-alike characters get used per letter
+- `PAD_POOL_BASE` / `PAD_POOL_RTL` — which scripts get used for padding
+- `SCRIPT_FONT` — which Noto family is used per detected script
+- `SIGNAL_PALETTE` — the candidate overflow-flag colors
+- `buildPadding()` — the ~35% RTL word-mix rate

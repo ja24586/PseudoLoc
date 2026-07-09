@@ -3,16 +3,60 @@
 <head>
 <meta charset="UTF-8" />
 <style>
+  /* Light defaults. Figma applies the .figma-dark class to <html>
+     automatically based on the user's theme, when the plugin opts in via
+     showUI's themeColors option — see the .figma-dark override block
+     below. Diagnostic colors (overflow signal orange/blue/magenta, error
+     red, the accent blue) deliberately stay the same in both themes —
+     those are meaningful signals, not decorative choices, and shouldn't
+     shift just because the theme did. */
+  :root {
+    --bg-primary: #ffffff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #555555;
+    --text-tertiary: #777777;
+    --text-muted: #888888;
+    --text-body: #444444;
+    --border-color: #dddddd;
+    --border-subtle: #eeeeee;
+    --hover-bg: #f0f0f0;
+    --icon-bg: #dddddd;
+    --panel-bg: #faf9f7;
+    --tooltip-bg: #1a1a1a;
+    --tooltip-text: #ffffff;
+    --accent: #18a0fb;
+    --accent-hover: #0d8ee0;
+    --error-color: #d13438;
+  }
+  .figma-dark {
+    --bg-primary: #2b2b2b;
+    --text-primary: #f0f0f0;
+    --text-secondary: #b3b3b3;
+    --text-tertiary: #999999;
+    --text-muted: #8a8a8a;
+    --text-body: #cccccc;
+    --border-color: #444444;
+    --border-subtle: #3a3a3a;
+    --hover-bg: #3a3a3a;
+    --icon-bg: #4a4a4a;
+    --panel-bg: #363636;
+    --tooltip-bg: #4a4a4a;
+    --tooltip-text: #ffffff;
+    --accent: #18a0fb;
+    --accent-hover: #4db8ff;
+    --error-color: #ff6b6e;
+  }
   body {
     font-family: Inter, "Helvetica Neue", Arial, sans-serif;
     margin: 0;
     padding: 16px;
-    color: #1a1a1a;
+    background: var(--bg-primary);
+    color: var(--text-primary);
   }
   p {
     font-size: 12px;
     line-height: 1.5;
-    color: #555;
+    color: var(--text-secondary);
     margin: 0 0 12px 0;
   }
   label.checkbox {
@@ -20,7 +64,7 @@
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    color: #1a1a1a;
+    color: var(--text-primary);
     margin-bottom: 12px;
     cursor: pointer;
   }
@@ -30,7 +74,7 @@
   button {
     width: 100%;
     padding: 10px 12px;
-    background: #18a0fb;
+    background: var(--accent);
     color: white;
     border: none;
     border-radius: 6px;
@@ -39,17 +83,17 @@
     cursor: pointer;
   }
   button:hover {
-    background: #0d8ee0;
+    background: var(--accent-hover);
   }
   button.secondary {
     margin-top: 8px;
     background: transparent;
-    color: #555;
+    color: var(--text-secondary);
     font-weight: 400;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
   }
   button.secondary:hover {
-    background: #f0f0f0;
+    background: var(--hover-bg);
   }
   button.small {
     width: auto;
@@ -60,7 +104,7 @@
   a.footer-link {
     display: block;
     font-size: 11px;
-    color: #18a0fb;
+    color: var(--accent);
     text-decoration: none;
     margin-top: 4px;
   }
@@ -69,12 +113,12 @@
   }
   a.footer-link.tertiary {
     font-size: 13px;
-    color: #555;
+    color: var(--text-secondary);
     text-align: center;
     margin-top: 12px;
   }
   a.footer-link.tertiary:hover {
-    color: #1a1a1a;
+    color: var(--text-primary);
   }
   .panel-header {
     display: flex;
@@ -91,27 +135,27 @@
   .panel-header .panel-title {
     font-size: 15px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--text-primary);
   }
   .feedback-block {
     margin-top: 20px;
     padding-top: 14px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-subtle);
   }
   p.feedback-title {
     font-size: 12px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--text-primary);
     margin: 0 0 4px 0;
   }
   p.feedback-body {
     font-size: 11px;
-    color: #777;
+    color: var(--text-tertiary);
     line-height: 1.5;
     margin: 0;
   }
   p.feedback-body a {
-    color: #18a0fb;
+    color: var(--accent);
     text-decoration: none;
     word-break: break-all;
   }
@@ -123,7 +167,7 @@
   }
   #notice {
     font-size: 12px;
-    color: #d13438;
+    color: var(--error-color);
     margin-bottom: 12px;
   }
   .summary-row {
@@ -131,7 +175,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-subtle);
     font-size: 12px;
   }
   .summary-row .label-group {
@@ -141,6 +185,41 @@
   }
   .summary-row .value {
     font-weight: 600;
+  }
+  .expandable-row {
+    cursor: pointer;
+  }
+  /* Zero-count rows: neither label nor value bold, 40% alpha, and no
+     pointer cursor — nothing happens on click since there's nothing to
+     expand. Nonzero: bold, full opacity, clickable. Both classes applied
+     via JS based on each row's actual count. */
+  .row-zero {
+    cursor: default;
+  }
+  .row-zero .row-label,
+  .row-zero .value {
+    font-weight: 400;
+    opacity: 0.4;
+  }
+  .row-nonzero .row-label,
+  .row-nonzero .value {
+    font-weight: 700;
+  }
+  .chevron {
+    color: var(--text-muted);
+    transition: transform 300ms ease;
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+  .chevron.hidden {
+    visibility: hidden; /* reserve the layout space even when a row has no chevron, so labels stay aligned */
+  }
+  .row-expanded .chevron {
+    /* Material's expand/collapse convention: a downward chevron
+       (expand_more) rotates 180° to point up when expanded, over ~300ms —
+       not a 90° rotation on a right-pointing triangle, which is what this
+       was before. */
+    transform: rotate(180deg);
   }
   .tooltip-wrapper {
     position: relative;
@@ -153,15 +232,15 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: #ddd;
-    color: #555;
+    background: var(--icon-bg);
+    color: var(--text-secondary);
     font-size: 10px;
     font-weight: 700;
     flex-shrink: 0;
     cursor: default;
   }
   .info-icon:focus-visible {
-    outline: 2px solid #18a0fb;
+    outline: 2px solid var(--accent);
     outline-offset: 1px;
   }
   /* Material 3 plain tooltip: appears on hover/focus, 4dp gap from anchor,
@@ -172,8 +251,8 @@
     left: 50%;
     transform: translateX(-50%);
     margin-top: 4px;
-    background: #1a1a1a;
-    color: #fff;
+    background: var(--tooltip-bg);
+    color: var(--tooltip-text);
     font-size: 11px;
     line-height: 1.4;
     padding: 6px 9px;
@@ -189,35 +268,43 @@
     opacity: 1;
     visibility: visible;
   }
-  #issueReview {
+  .review-panel {
     display: none;
-    background: #faf9f7;
+    background: var(--panel-bg);
     border-radius: 6px;
     padding: 10px;
     margin-top: 4px;
     margin-bottom: 8px;
   }
-  #issueReview.expanded {
+  .review-panel.expanded {
     display: block;
   }
-  #issueReview .review-index {
+  .review-panel .review-index {
     font-size: 11px;
-    color: #888;
+    color: var(--text-muted);
     margin-bottom: 4px;
   }
-  #issueReview .review-node-name {
+  .review-panel .review-node-name {
     font-size: 12px;
     font-weight: 600;
     margin-bottom: 4px;
   }
-  #issueReview .review-message {
+  .review-panel .review-message {
     font-size: 11px;
-    color: #444;
+    color: var(--text-body);
     margin-bottom: 4px;
     padding-left: 8px;
-    border-left: 2px solid #ccc;
+    border-left: 2px solid var(--border-color);
   }
-  #issueReview .review-buttons {
+  .review-panel .review-message a {
+    color: var(--accent);
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .review-panel .review-message a:hover {
+    text-decoration: underline;
+  }
+  .review-panel .review-buttons {
     display: flex;
     gap: 6px;
     margin-top: 8px;
@@ -262,9 +349,10 @@
       <img src="data:image/png;base64,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" alt="" />
       <span class="panel-title">Summary</span>
     </div>
-    <div class="summary-row">
+    <div class="summary-row expandable-row" id="rowLoc" data-row="loc">
       <div class="label-group">
-        <span>LOC issues found</span>
+        <span class="chevron" id="chevronLoc"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+        <span class="row-label" id="labelLoc">LOC issues found</span>
         <span class="tooltip-wrapper">
           <span class="info-icon" id="locInfoIcon" tabindex="0" role="button" aria-describedby="locInfoText">i</span>
           <span class="plain-tooltip" id="locInfoText" role="tooltip">
@@ -274,34 +362,72 @@
       </div>
       <span class="value" id="locIssuesValue">0</span>
     </div>
-
-    <div id="issueReview">
-      <div class="review-index" id="reviewIndex"></div>
-      <div class="review-node-name" id="reviewNodeName"></div>
-      <div id="reviewMessages"></div>
+    <div class="review-panel" id="panelLoc">
+      <div class="review-index"></div>
+      <div class="review-node-name"></div>
+      <div class="review-messages"></div>
       <div class="review-buttons">
         <span class="tooltip-wrapper">
-          <button class="small secondary" id="reviewBack">Back</button>
-          <span class="plain-tooltip" id="reviewBackTooltip" role="tooltip">Use arrow keys to navigate</span>
+          <button class="small secondary" data-action="back" data-row="loc">Back</button>
+          <span class="plain-tooltip" role="tooltip">Use arrow keys to navigate</span>
         </span>
         <span class="tooltip-wrapper">
-          <button class="small secondary" id="reviewNext">Next</button>
-          <span class="plain-tooltip" id="reviewNextTooltip" role="tooltip">Use arrow keys to navigate</span>
+          <button class="small secondary" data-action="next" data-row="loc">Next</button>
+          <span class="plain-tooltip" role="tooltip">Use arrow keys to navigate</span>
         </span>
       </div>
     </div>
 
-    <div class="summary-row">
-      <span>Locked / hidden layers skipped</span>
+    <div class="summary-row expandable-row" id="rowLockedSkipped" data-row="lockedSkipped">
+      <div class="label-group">
+        <span class="chevron" id="chevronLockedSkipped"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+        <span class="row-label" id="labelLockedSkipped">Locked / hidden layers skipped</span>
+      </div>
       <span class="value" id="skippedLockedValue">0</span>
     </div>
-    <div class="summary-row">
-      <span>Empty text layers skipped</span>
+    <div class="review-panel" id="panelLockedSkipped">
+      <div class="review-index"></div>
+      <div class="review-node-name"></div>
+      <div class="review-messages"></div>
+      <div class="review-buttons">
+        <span class="tooltip-wrapper">
+          <button class="small secondary" data-action="back" data-row="lockedSkipped">Back</button>
+          <span class="plain-tooltip" role="tooltip">Use arrow keys to navigate</span>
+        </span>
+        <span class="tooltip-wrapper">
+          <button class="small secondary" data-action="next" data-row="lockedSkipped">Next</button>
+          <span class="plain-tooltip" role="tooltip">Use arrow keys to navigate</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="summary-row expandable-row" id="rowEmptySkipped" data-row="emptySkipped">
+      <div class="label-group">
+        <span class="chevron" id="chevronEmptySkipped"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+        <span class="row-label" id="labelEmptySkipped">Excluded / empty layers skipped</span>
+      </div>
       <span class="value" id="skippedEmptyValue">0</span>
     </div>
-    <div class="summary-row">
+    <div class="review-panel" id="panelEmptySkipped">
+      <div class="review-index"></div>
+      <div class="review-node-name"></div>
+      <div class="review-messages"></div>
+      <div class="review-buttons">
+        <span class="tooltip-wrapper">
+          <button class="small secondary" data-action="back" data-row="emptySkipped">Back</button>
+          <span class="plain-tooltip" role="tooltip">Use arrow keys to navigate</span>
+        </span>
+        <span class="tooltip-wrapper">
+          <button class="small secondary" data-action="next" data-row="emptySkipped">Next</button>
+          <span class="plain-tooltip" role="tooltip">Use arrow keys to navigate</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="summary-row expandable-row" id="rowErrors" data-row="errors">
       <div class="label-group">
-        <span>Errors</span>
+        <span class="chevron" id="chevronErrors"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+        <span class="row-label" id="labelErrors">Errors</span>
         <span class="tooltip-wrapper">
           <span class="info-icon" id="errorsInfoIcon" tabindex="0" role="button" aria-describedby="errorsInfoText">i</span>
           <span class="plain-tooltip" id="errorsInfoText" role="tooltip">
@@ -311,19 +437,38 @@
       </div>
       <span class="value" id="errorsValue">0</span>
     </div>
+    <div class="review-panel" id="panelErrors">
+      <div class="review-index"></div>
+      <div class="review-node-name"></div>
+      <div class="review-messages"></div>
+      <div class="review-buttons">
+        <span class="tooltip-wrapper">
+          <button class="small secondary" data-action="back" data-row="errors">Back</button>
+          <span class="plain-tooltip" role="tooltip">Use arrow keys to navigate</span>
+        </span>
+        <span class="tooltip-wrapper">
+          <button class="small secondary" data-action="next" data-row="errors">Next</button>
+          <span class="plain-tooltip" role="tooltip">Use arrow keys to navigate</span>
+        </span>
+      </div>
+    </div>
 
     <button id="viewLog" class="secondary hidden" style="margin-top: 12px;">View Log</button>
     <button id="runDone" style="margin-top: 8px;">Done</button>
   </div>
 
   <script>
+    // Reads a CSS custom property's current computed value — used where JS
+    // needs an actual color string (inline styles, not CSS classes), so
+    // those values track whichever theme is currently active instead of
+    // being frozen to whatever was hardcoded at write time.
+    function cssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
     const notice = document.getElementById("notice");
     const settingsView = document.getElementById("settingsView");
     const runView = document.getElementById("runView");
-
-    let currentIssueLog = [];
-    let currentErrorLog = [];
-    let reviewIndex = 0;
 
     // Enter closes whichever view is active. The original Enter-to-run
     // behavior no longer applies now that Run is invoked directly from the
@@ -415,9 +560,7 @@
       }
     }
 
-    function wireTooltip(iconId, tooltipId) {
-      const icon = document.getElementById(iconId);
-      const tooltip = document.getElementById(tooltipId);
+    function wireTooltipEls(icon, tooltip) {
       const wrapper = icon.closest(".tooltip-wrapper");
 
       const show = () => {
@@ -440,66 +583,158 @@
       icon.addEventListener("mouseleave", scheduleHide);
       icon.addEventListener("blur", scheduleHide);
     }
+
+    function wireTooltip(iconId, tooltipId) {
+      wireTooltipEls(document.getElementById(iconId), document.getElementById(tooltipId));
+    }
     wireTooltip("locInfoIcon", "locInfoText");
     wireTooltip("errorsInfoIcon", "errorsInfoText");
-    wireTooltip("reviewBack", "reviewBackTooltip");
-    wireTooltip("reviewNext", "reviewNextTooltip");
+    // Back/Next tooltips wired per-row further down, once each row's
+    // buttons exist and are looked up generically.
 
     // ------------------------------------------------------------------
-    // Issue review — Back/Next only (Skip removed). Arrow keys mirror the
-    // buttons while the review section is expanded, for fast keyboard
-    // tap-through. The review section is now ALWAYS visible whenever any
-    // issues were found — no click-to-expand, per decision.
+    // Generic accordion + review system, shared across all four summary
+    // rows (LOC issues, locked/hidden skipped, empty skipped, errors).
+    // Only one row expanded at a time — expanding a row collapses whatever
+    // else was open. Rows with a zero count get no chevron and aren't
+    // clickable at all.
     // ------------------------------------------------------------------
-    function renderReviewStep() {
-      if (currentIssueLog.length === 0) return;
-      const item = currentIssueLog[reviewIndex];
-      document.getElementById("reviewIndex").textContent =
-        "Issue " + (reviewIndex + 1) + " of " + currentIssueLog.length;
-      document.getElementById("reviewNodeName").textContent = item.nodeName;
-      const msgContainer = document.getElementById("reviewMessages");
+    const ROW_CONFIG = {
+      loc: { rowId: "rowLoc", panelId: "panelLoc", valueId: "locIssuesValue", labelId: "labelLoc", chevronId: "chevronLoc" },
+      lockedSkipped: { rowId: "rowLockedSkipped", panelId: "panelLockedSkipped", valueId: "skippedLockedValue", labelId: "labelLockedSkipped", chevronId: "chevronLockedSkipped" },
+      emptySkipped: { rowId: "rowEmptySkipped", panelId: "panelEmptySkipped", valueId: "skippedEmptyValue", labelId: "labelEmptySkipped", chevronId: "chevronEmptySkipped" },
+      errors: { rowId: "rowErrors", panelId: "panelErrors", valueId: "errorsValue", labelId: "labelErrors", chevronId: "chevronErrors" }
+    };
+
+    let logsByRow = { loc: [], lockedSkipped: [], emptySkipped: [], errors: [] };
+    let reviewIndexByRow = { loc: 0, lockedSkipped: 0, emptySkipped: 0, errors: 0 };
+    let expandedRow = null;
+
+    function renderReviewStep(rowKey) {
+      const cfg = ROW_CONFIG[rowKey];
+      const log = logsByRow[rowKey];
+      if (log.length === 0) return;
+      const idx = reviewIndexByRow[rowKey];
+      const item = log[idx];
+      const panel = document.getElementById(cfg.panelId);
+      panel.querySelector(".review-index").textContent = "Item " + (idx + 1) + " of " + log.length;
+      panel.querySelector(".review-node-name").textContent = item.nodeName;
+      const msgContainer = panel.querySelector(".review-messages");
       msgContainer.innerHTML = "";
       item.messages.forEach((m) => {
         const div = document.createElement("div");
         div.className = "review-message";
         div.style.borderLeftColor = m.color;
-        div.textContent = m.text;
+        if (m.link) {
+          const span = document.createElement("span");
+          span.textContent = m.text + " ";
+          div.appendChild(span);
+          const a = document.createElement("a");
+          a.href = m.link;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = m.link;
+          div.appendChild(a);
+        } else {
+          div.textContent = m.text;
+        }
         msgContainer.appendChild(div);
       });
-      // Message-sending is intentionally NOT here — see sendSelectNode()
-      // below. On first display, the resize message needs to reach the main
-      // thread BEFORE selectNode, so its collision-avoidance check has the
-      // panel's real final dimensions rather than the initial default.
+      // Message-sending intentionally NOT here — see sendSelectNodeForRow().
+      // On first expand, the resize message needs to reach the main thread
+      // BEFORE selectNode, so collision-avoidance has real final dimensions.
     }
 
-    function sendSelectNode() {
-      if (currentIssueLog.length === 0) return;
-      const item = currentIssueLog[reviewIndex];
-      parent.postMessage({ pluginMessage: { type: "selectNode", nodeId: item.nodeId } }, "*");
+    function sendSelectNodeForRow(rowKey) {
+      const log = logsByRow[rowKey];
+      const idx = reviewIndexByRow[rowKey];
+      if (!log[idx]) return;
+      parent.postMessage({ pluginMessage: { type: "selectNode", nodeId: log[idx].nodeId } }, "*");
     }
 
-    function reviewNext() {
-      reviewIndex = Math.min(reviewIndex + 1, currentIssueLog.length - 1);
-      renderReviewStep();
-      sendSelectNode();
+    function reviewNextForRow(rowKey) {
+      const log = logsByRow[rowKey];
+      reviewIndexByRow[rowKey] = Math.min(reviewIndexByRow[rowKey] + 1, log.length - 1);
+      renderReviewStep(rowKey);
+      sendSelectNodeForRow(rowKey);
     }
-    function reviewBack() {
-      reviewIndex = Math.max(reviewIndex - 1, 0);
-      renderReviewStep();
-      sendSelectNode();
+    function reviewBackForRow(rowKey) {
+      reviewIndexByRow[rowKey] = Math.max(reviewIndexByRow[rowKey] - 1, 0);
+      renderReviewStep(rowKey);
+      sendSelectNodeForRow(rowKey);
     }
-    document.getElementById("reviewNext").onclick = reviewNext;
-    document.getElementById("reviewBack").onclick = reviewBack;
+
+    function collapseRow(rowKey) {
+      const cfg = ROW_CONFIG[rowKey];
+      document.getElementById(cfg.panelId).classList.remove("expanded");
+      document.getElementById(cfg.rowId).classList.remove("row-expanded");
+    }
+
+    function expandRow(rowKey) {
+      const cfg = ROW_CONFIG[rowKey];
+      reviewIndexByRow[rowKey] = 0;
+      document.getElementById(cfg.rowId).classList.add("row-expanded");
+      document.getElementById(cfg.panelId).classList.add("expanded");
+      renderReviewStep(rowKey);
+
+      // requestAnimationFrame matters here, not just style: reading
+      // scrollHeight in the same synchronous tick as the class mutations
+      // above risks measuring BEFORE the browser has finished reflowing —
+      // a real, confirmed source of the panel getting resized too short
+      // and needing to scroll. Settings view already did this correctly;
+      // this and the run-view init handler below didn't.
+      requestAnimationFrame(() => {
+        const neededHeight = Math.ceil(document.body.scrollHeight) + 20;
+        parent.postMessage(
+          { pluginMessage: { type: "resize", width: 320, height: Math.max(neededHeight, 200) } },
+          "*"
+        );
+        // Sent AFTER the resize message on purpose, matching the original
+        // first-display sequencing — collision avoidance needs the panel's
+        // real final dimensions, not whatever was in place before resizing.
+        sendSelectNodeForRow(rowKey);
+      });
+    }
+
+    function toggleRow(rowKey) {
+      if (logsByRow[rowKey].length === 0) return; // nothing to expand for an empty/zero row
+
+      if (expandedRow === rowKey) {
+        collapseRow(rowKey);
+        expandedRow = null;
+        return;
+      }
+      if (expandedRow) collapseRow(expandedRow);
+      expandedRow = rowKey;
+      expandRow(rowKey);
+    }
+
+    Object.keys(ROW_CONFIG).forEach((rowKey) => {
+      const cfg = ROW_CONFIG[rowKey];
+      document.getElementById(cfg.rowId).addEventListener("click", (e) => {
+        if (e.target.closest(".tooltip-wrapper")) return; // don't toggle when clicking the info icon
+        toggleRow(rowKey);
+      });
+
+      const backBtn = document.querySelector('button[data-action="back"][data-row="' + rowKey + '"]');
+      const nextBtn = document.querySelector('button[data-action="next"][data-row="' + rowKey + '"]');
+      backBtn.addEventListener("click", (e) => { e.stopPropagation(); reviewBackForRow(rowKey); });
+      nextBtn.addEventListener("click", (e) => { e.stopPropagation(); reviewNextForRow(rowKey); });
+
+      const backTooltip = backBtn.parentElement.querySelector(".plain-tooltip");
+      const nextTooltip = nextBtn.parentElement.querySelector(".plain-tooltip");
+      wireTooltipEls(backBtn, backTooltip);
+      wireTooltipEls(nextBtn, nextTooltip);
+    });
 
     document.addEventListener("keydown", (e) => {
-      const review = document.getElementById("issueReview");
-      if (!review.classList.contains("expanded")) return;
+      if (!expandedRow) return;
       if (e.key === "ArrowRight") {
         e.preventDefault();
-        reviewNext();
+        reviewNextForRow(expandedRow);
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
-        reviewBack();
+        reviewBackForRow(expandedRow);
       }
     });
 
@@ -512,10 +747,11 @@
       let text = "Shibb Pseudolocalizer — Error Log\n";
       text += "Generated " + new Date().toISOString() + "\n";
       text += "=".repeat(50) + "\n\n";
-      currentErrorLog.forEach((err, i) => {
+      logsByRow.errors.forEach((err, i) => {
+        const msg = err.messages[0];
         text += (i + 1) + ". " + err.nodeName + "\n";
-        text += "   " + err.message + "\n";
-        if (err.link) text += "   Resource: " + err.link + "\n";
+        text += "   " + msg.text + "\n";
+        if (msg.link) text += "   Resource: " + msg.link + "\n";
         text += "\n";
       });
       const blob = new Blob([text], { type: "text/plain" });
@@ -560,36 +796,101 @@
       if (msg.type === "init" && msg.view === "run") {
         runView.classList.remove("hidden");
         const stats = msg.stats || {};
-        currentIssueLog = msg.issueLog || [];
-        currentErrorLog = msg.errorLog || [];
 
-        document.getElementById("locIssuesValue").textContent = stats.locIssuesFound || 0;
-        document.getElementById("skippedLockedValue").textContent = stats.skippedLocked || 0;
-        document.getElementById("skippedEmptyValue").textContent = stats.skippedEmpty || 0;
-        document.getElementById("errorsValue").textContent = stats.errors || 0;
+        // Normalize all four sources into the same {nodeId, nodeName,
+        // messages: [{color, text, link?}]} shape the generic reviewer
+        // expects. LOC issues already arrive in this shape from code.js;
+        // the other three get synthesized here. Colors read from the live
+        // CSS custom properties (not hardcoded hex) so they track whichever
+        // theme is currently active rather than freezing to light-mode
+        // values regardless of the figma-dark class.
+        const skipColor = cssVar("--text-muted");
+        const errorColor = cssVar("--error-color");
+
+        logsByRow.loc = msg.issueLog || [];
+        logsByRow.lockedSkipped = (msg.skippedLockedLog || []).map((item) => ({
+          nodeId: item.nodeId,
+          nodeName: item.nodeName,
+          messages: [{ color: skipColor, text: "Skipped \u2014 this layer is locked or hidden." }]
+        }));
+        logsByRow.emptySkipped = (msg.skippedEmptyLog || []).map((item) => {
+          const reasonText = {
+            empty: "Skipped \u2014 this text layer has no content.",
+            already: "Skipped \u2014 already pseudolocalized; nothing has changed since.",
+            excluded: "Skipped \u2014 this text is a date, number, ID, or placeholder with no other content to test."
+          }[item.reason] || "Skipped.";
+          return {
+            nodeId: item.nodeId,
+            nodeName: item.nodeName,
+            messages: [{ color: skipColor, text: reasonText }]
+          };
+        });
+        logsByRow.errors = (msg.errorLog || []).map((item) => ({
+          nodeId: item.nodeId,
+          nodeName: item.nodeName,
+          messages: [{ color: errorColor, text: item.message, link: item.link || null }]
+        }));
+
+        const counts = {
+          loc: stats.locIssuesFound || 0,
+          lockedSkipped: stats.skippedLocked || 0,
+          emptySkipped: stats.skippedEmpty || 0,
+          errors: stats.errors || 0
+        };
+
+        Object.keys(ROW_CONFIG).forEach((rowKey) => {
+          const cfg = ROW_CONFIG[rowKey];
+          const count = counts[rowKey];
+          document.getElementById(cfg.valueId).textContent = count;
+
+          const rowEl = document.getElementById(cfg.rowId);
+          const chevronEl = document.getElementById(cfg.chevronId);
+          if (count > 0) {
+            rowEl.classList.add("row-nonzero");
+            rowEl.classList.remove("row-zero");
+            chevronEl.classList.remove("hidden");
+          } else {
+            rowEl.classList.add("row-zero");
+            rowEl.classList.remove("row-nonzero");
+            chevronEl.classList.add("hidden");
+          }
+        });
 
         if (stats.errors > 0) {
           document.getElementById("viewLog").classList.remove("hidden");
         }
 
-        // Always visible when there are issues — no click-to-expand.
-        if (currentIssueLog.length > 0) {
-          document.getElementById("issueReview").classList.add("expanded");
-          reviewIndex = 0;
-          renderReviewStep(); // populate content so the height measurement below is accurate
+        // Auto-expand the highest-priority nonzero row: LOC issues first,
+        // then errors, then locked/hidden skipped, then empty skipped.
+        // toggleRow() already handles the resize+selectNode sequencing
+        // (via expandRow()), so reusing it here gets the same collision
+        // avoidance a manual click would get, for free.
+        const priorityOrder = ["loc", "errors", "lockedSkipped", "emptySkipped"];
+        const winningRow = priorityOrder.find((key) => logsByRow[key].length > 0);
+
+        if (winningRow) {
+          toggleRow(winningRow);
+        } else {
+          // Nothing to expand — only reachable via "Always show summary" on
+          // a fully clean run, since the toast-vs-panel logic in code.js
+          // wouldn't otherwise open the panel at all with everything at
+          // zero. Falls back to checking the panel against whatever was
+          // already selected when Run was invoked, so it at least doesn't
+          // land on top of the user's current work by coincidence.
+          requestAnimationFrame(() => {
+            const neededHeight = Math.ceil(document.body.scrollHeight) + 20;
+            parent.postMessage(
+              { pluginMessage: { type: "resize", width: 320, height: Math.max(neededHeight, 200) } },
+              "*"
+            );
+            if (msg.firstSelectedNodeId) {
+              parent.postMessage(
+                { pluginMessage: { type: "avoidCoveringSelection", nodeId: msg.firstSelectedNodeId } },
+                "*"
+              );
+            }
+          });
         }
-
-        const neededHeight = Math.ceil(document.body.scrollHeight) + 20;
-        parent.postMessage(
-          { pluginMessage: { type: "resize", width: 320, height: Math.max(neededHeight, 200) } },
-          "*"
-        );
-
-        // Sent AFTER resize on purpose — code.js's collision-avoidance check
-        // (triggered by selectNode) needs the panel's real final dimensions,
-        // not whatever default was in place before this resize message
-        // arrives on the main thread.
-        if (currentIssueLog.length > 0) sendSelectNode();
         return;
       }
     };
