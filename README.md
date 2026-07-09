@@ -8,19 +8,19 @@ RTL and multilingual edge cases, and helps designers catch internationalization
 issues before they hit your bottom line.
 
 # Features
-- 📦 Finds hidden Auto Layout issues
-- ✏️ Checks inferred containers to catch text-nesting errors
-- 🌍 Realistic multilingual pseudolocalization — not just Latin with accents
-- 🔒 Recognizes and ignores placeholders, dates, IDs, and other non-localizable content
-- 📏 Applies IBM's dynamic text expansion rules based on visual length, not character count
-- 📐 Checks for collisions between lines
-- 🔤 Script-aware dynamic Noto assignment & missing script check
-- 🎯 Deterministic pseudoLOC output persists across runs
-- 📋 Summary report describes each issue, with an exportable summary
-- ↔️ RTL (Arabic & Hebrew) option
-- 🈳 True edge-case stress testing via CJK, Thai, & Vietnamese charsets
-- 🌓 Automatically matches Figma's light/dark theme
-- 📍 Review panel avoids covering the exact issue it's describing
+📦 Finds hidden Auto Layout issues
+✏️ Checks inferred containers to catch text-nesting errors
+🌍 Realistic multilingual pseudolocalization — not just Latin with accents
+🔒 Recognizes and ignores placeholders, dates, IDs, and other non-localizable content
+📏 Applies IBM's dynamic text expansion rules based on visual length, not character count
+📐 Checks for collisions between lines
+🔤 Script-aware dynamic Noto assignment & missing script check
+🎯 Deterministic pseudoLOC output persists across runs
+📋 Summary report describes each issue, with an exportable summary
+↔️ RTL (Arabic & Hebrew) option
+🈳 True edge-case stress testing via CJK, Thai, & Vietnamese charsets
+🌓 Automatically matches Figma's light/dark theme
+📍 Review panel avoids covering the exact issue it's describing
 
 ## Details
 
