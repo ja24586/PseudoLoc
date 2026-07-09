@@ -1,17 +1,13 @@
 # Shibb — a pseudolocalization plugin for Figma
 
 # Overview
-Find localization-induced layout failures before translated content ever
-reaches engineering or QA. Shibb generates realistic pseudolocalized
-content, automatically detects layout failures, protects localization
-placeholders, simulates RTL and multilingual edge cases, and helps designers
-catch internationalization issues long before production.
+Find localization bugs before sending copy to vendors or engineering. Shibb
+generates realistic pseudolocalized content, automatically detects layout
+failures, protects localization placeholders, simulates RTL and multilingual
+edge cases, and helps designers catch internationalization issues long before
+they reach production.
 
-Accidentally placed text as a sibling layer to a bounding object, rather than
-as a nested? We'll catch that. Shibb identifies these "probably should have
-clipped" situations and flags them as inferred layout risks. 
-
-# 
+# Features
 - 📦 Finds hidden Auto Layout issues
 - ✏️ Checks inferred containers to catch text-nesting errors
 - 🌍 Realistic multilingual pseudolocalization- not just Latin with accents
