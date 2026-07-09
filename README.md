@@ -1,6 +1,21 @@
 # Shibb — a pseudolocalization plugin for Figma
 
-# Test how designs will handle translations, before you deliver.
+# Overview
+Stress-test your designs before they're translated. Shibb generates realistic
+pseudolocalized content, automatically detects layout failures, protects
+localization placeholders, simulates RTL and multilingual edge cases, and
+helps designers catch internationalization issues long before production.
+
+🌍 Realistic multilingual pseudolocalization
+📏 Applies IBM text expansion rules to grapheme length, not CharLength
+↔️ Optional RTL (Arabic & Hebrew) testing
+🈳 CJK, Thai, Vietnamese, and mixed-script stress testing
+🔒 Placeholder-safe pseudolocalization
+📦 Automatic overflow and clipping detection
+📐 Vertical glyph collision detection
+🔤 Script-aware Noto font assignment
+🎯 Deterministic, repeatable output
+📋 Review panel with issue navigation and exportable logs
 
 ## Details
 
